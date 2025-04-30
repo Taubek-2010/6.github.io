@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathFlash - Интерактивные карточки по математике</title>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --dark-color: #2d3436;
+            --light-color: #f5f6fa;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+            --grade-colors: #ff7675, #74b9ff, #55efc4, #a29bfe, #ffeaa7, #fd79a8, #00cec9, #e17055, #0984e3, #6c5ce7, #00b894;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                #ff7675, #74b9ff, #55efc4, #a29bfe, 
+                #ffeaa7, #fd79a8, #00cec9, #e17055, 
+                #0984e3, #6c5ce7, #00b894);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 1s ease;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .intro {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            text-align: center;
+        }
+
+        .intro h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .intro p {
+            margin-bottom: 1.5rem;
+        }
+
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 280px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .grade-section {
+            background: white;
+            padding: 2rem 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .grade-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+
+        .grades-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .grade-card {
+            width: 150px;
+            height: 80px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grade-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .grade-card:hover::before {
+            opacity: 1;
+        }
+
+        .grade-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: none;
+        }
+
+        .topic-selector {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .topic-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background-color: white;
+            color: var(--dark-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .topic-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .topic-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .flashcards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .flashcard {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flashcard:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            transition: all 0.6s ease;
+        }
+
+        .flashcard-front {
+            transform: rotateY(0deg);
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background-color: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .flashcard-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .flashcard-content {
+            font-size: 1.1rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .formula {
+            font-size: 1.5rem;
+            font-family: 'Times New Roman', Times, serif;
+            margin: 1rem 0;
+            color: var(--dark-color);
+            background-color: #f1f2f6;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .example {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn:hover {
+            background-color: #3a5bef;
+            transform: translateY(-2px);
+        }
+
+        .control-btn.secondary {
+            background-color: var(--secondary-color);
+        }
+
+        .control-btn.secondary:hover {
+            background-color: #ef5a5a;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            background-color: var(--dark-color);
+            color: white;
+            margin-top: auto;
+        }
+
+        .back-btn {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .flashcard {
+            animation: cardAppear 0.5s ease forwards;
+        }
+
+        .flashcard:nth-child(1) { animation-delay: 0.1s; }
+        .flashcard:nth-child(2) { animation-delay: 0.2s; }
+        .flashcard:nth-child(3) { animation-delay: 0.3s; }
+        .flashcard:nth-child(4) { animation-delay: 0.4s; }
+        .flashcard:nth-child(5) { animation-delay: 0.5s; }
+        .flashcard:nth-child(6) { animation-delay: 0.6s; }
+
+        /* Progress */
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 50px;
+            margin: 1rem 0;
+            height: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 50px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        /* Flip icon */
+        .flip-icon {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .flashcards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .grade-card {
+                width: 120px;
+                height: 70px;
+                font-size: 1rem;
+            }
+            
+            .feature {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>MathFlash</h1>
+        <p class="subtitle">Интерактивные карточки для изучения математики с 1 по 11 класс</p>
+    </header>
+
+    <div class="intro">
+        <h2>Учите математику легко и интересно!</h2>
+        <p>MathFlash - это интерактивное приложение для изучения математики с помощью карточек. Выбирайте свой класс и тему, изучайте формулы и определения, проверяйте свои знания и отслеживайте прогресс.</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <h3>Интерактивные карточки</h3>
+                <p>Переворачивайте карточки, чтобы увидеть ответ и примеры применения</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Отслеживание прогресса</h3>
+                <p>Система запоминает изученные вами карточки</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                <h3>Для всех классов</h3>
+                <p>Материалы с 1 по 11 класс, соответствующие школьной программе</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grade-section">
+        <h2>Выберите ваш класс</h2>
+        <div class="grades-container" id="gradesContainer">
+            <!-- Grades will be added by JavaScript -->
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer">
+        <div class="back-btn">
+            <button class="control-btn secondary" id="backToGradesBtn">← Назад к выбору класса</button>
+        </div>
+        
+        <div class="topic-selector" id="topicSelector">
+            <!-- Topics will be added dynamically -->
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">Прогресс: 0/0 изучено</div>
+
+        <div class="flashcards-container" id="flashcardsContainer">
+            <!-- Flashcards will be added by JavaScript -->
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="resetBtn">Сбросить прогресс</button>
+            <button class="control-btn secondary" id="shuffleBtn">Перемешать карточки</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2023 MathFlash | Интерактивные карточки для изучения математики</p>
+    </footer>
+
+    <script>
+        // Данные для карточек по классам и темам
+        const flashcardsData = {
+            "1": {
+                "Цифры и числа": [
+                    {title: "Цифры", question: "Какие цифры ты знаешь?", answer: "0, 1, 2, 3, 4, 5, 6, 7, 8, 9"},
+                    {title: "Числа до 10", question: "Назови числа от 1 до 10", answer: "1, 2, 3, 4, 5, 6, 7, 8, 9, 10"}
+                ],
+                "Сложение": [
+                    {title: "Сложение до 5", question: "Сколько будет 2 + 3?", answer: "5"},
+                    {title: "Сложение до 10", question: "Сколько будет 4 + 6?", answer: "10"}
+                ],
+                "Вычитание": [
+                    {title: "Вычитание до 5", question: "Сколько будет 5 - 2?", answer: "3"},
+                    {title: "Вычитание до 10", question: "Сколько будет 10 - 4?", answer: "6"}
+                ],
+                "Геометрические фигуры": [
+                    {title: "Основные фигуры", question: "Какие геометрические фигуры ты знаешь?", answer: "Круг, квадрат, треугольник, прямоугольник"}
+                ],
+                "Сравнение чисел": [
+                    {title: "Больше, меньше", question: "Что больше: 5 или 3?", answer: "5 > 3"}
+                ],
+                "Задачи на логику": [
+                    {title: "Простая задача", question: "У Маши 2 яблока, а у Пети 3. Сколько всего яблок?", answer: "5 яблок"}
+                ],
+                "Измерения": [
+                    {title: "Длина", question: "Что длиннее: карандаш или линейка?", answer: "Обычно линейка длиннее"}
+                ]
+            },
+            "2": {
+                "Сложение и вычитание": [
+                    {title: "Сложение до 20", question: "Сколько будет 12 + 7?", answer: "19"},
+                    {title: "Вычитание до 20", question: "Сколько будет 15 - 8?", answer: "7"}
+                ],
+                "Умножение": [
+                    {title: "Таблица умножения на 2", question: "Сколько будет 2 × 5?", answer: "10"}
+                ],
+                "Деление": [
+                    {title: "Простое деление", question: "Сколько будет 10 ÷ 2?", answer: "5"}
+                ],
+                "Задачи": [
+                    {title: "Текстовая задача", question: "В классе 10 девочек и 12 мальчиков. Сколько всего детей?", answer: "22 ребенка"}
+                ],
+                "Геометрия": [
+                    {title: "Периметр", question: "Как найти периметр квадрата?", answer: "Сложить все стороны"}
+                ],
+                "Дроби": [
+                    {title: "Понятие дроби", question: "Что показывает знаменатель дроби?", answer: "На сколько частей разделили целое"}
+                ],
+                "Измерения": [
+                    {title: "Единицы длины", question: "Сколько сантиметров в 1 метре?", answer: "100 см"}
+                ]
+            },
+            "3": {
+                "Таблица умножения": [
+                    {title: "Умножение на 3", question: "Сколько будет 3 × 7?", answer: "21"},
+                    {title: "Умножение на 4", question: "Сколько будет 4 × 6?", answer: "24"}
+                ],
+                "Деление": [
+                    {title: "Деление с остатком", question: "Сколько будет 17 ÷ 3?", answer: "5 и 2 в остатке"}
+                ],
+                "Дроби": [
+                    {title: "Простые дроби", question: "Как записать одну вторую?", answer: "1/2"}
+                ],
+                "Периметр и площадь": [
+                    {title: "Площадь прямоугольника", question: "Как найти площадь прямоугольника?", answer: "Длину умножить на ширину"}
+                ],
+                "Задачи": [
+                    {title: "Составные задачи", question: "Купили 3 ручки по 5 рублей и 2 тетради по 10 рублей. Сколько всего заплатили?", answer: "3×5 + 2×10 = 15 + 20 = 35 рублей"}
+                ],
+                "Время": [
+                    {title: "Определение времени", question: "Сколько минут в 2 часах?", answer: "120 минут"}
+                ],
+                "Геометрия": [
+                    {title: "Виды треугольников", question: "Как называется треугольник с равными сторонами?", answer: "Равносторонний"}
+                ]
+            },
+            "4": {
+                "Дроби": [
+                    {title: "Сравнение дробей", question: "Что больше: 1/2 или 1/3?", answer: "1/2 > 1/3"}
+                ],
+                "Деление": [
+                    {title: "Деление многозначных чисел", question: "Сколько будет 144 ÷ 12?", answer: "12"}
+                ],
+                "Проценты": [
+                    {title: "Понятие процента", question: "Как записать 25% в виде дроби?", answer: "25/100 или 1/4"}
+                ],
+                "Площадь": [
+                    {title: "Площадь квадрата", question: "Как найти площадь квадрата?", answer: "Сторону умножить на себя"}
+                ],
+                "Объем": [
+                    {title: "Объем прямоугольного параллелепипеда", question: "Как найти объем?", answer: "Длину × ширину × высоту"}
+                ],
+                "Скорость, время, расстояние": [
+                    {title: "Формула расстояния", question: "Как найти расстояние, если известны скорость и время?", answer: "Расстояние = Скорость × Время"}
+                ],
+                "Задачи на логику": [
+                    {title: "Логическая задача", question: "Если 5 стульев стоят 1000 рублей, сколько стоят 7 стульев?", answer: "1000 ÷ 5 × 7 = 1400 рублей"}
+                ]
+            },
+            "5": {
+                "Натуральные числа": [
+                    {title: "Разряды чисел", question: "Какие разряды есть в числе 5 674?", answer: "5 - тысячи, 6 - сотни, 7 - десятки, 4 - единицы"}
+                ],
+                "Дроби": [
+                    {title: "Сокращение дробей", question: "Как сократить дробь 12/18?", answer: "Делим числитель и знаменатель на НОД(12,18)=6 → 2/3"}
+                ],
+                "Десятичные дроби": [
+                    {title: "Умножение на 10, 100, 1000", question: "Как умножить 3.45 на 100?", answer: "Переносим запятую на 2 знака вправо → 345"}
+                ],
+                "Проценты": [
+                    {title: "Нахождение процента", question: "Как найти 20% от 150?", answer: "150 × 0.20 = 30"}
+                ],
+                "Геометрия": [
+                    {title: "Площадь треугольника", question: "Как вычисляется площадь треугольника?", answer: "S = (a * h) / 2"}
+                ],
+                "Уравнения": [
+                    {title: "Простое уравнение", question: "Решите уравнение: x + 5 = 12", answer: "x = 12 - 5 = 7"}
+                ],
+                "Объемы": [
+                    {title: "Объем куба", question: "Как найти объем куба с ребром 3 см?", answer: "3 × 3 × 3 = 27 см³"}
+                ]
+            },
+            "6": {
+                "Обыкновенные дроби": [
+                    {title: "Сложение дробей", question: "Как сложить 1/4 и 1/6?", answer: "Приводим к общему знаменателю 12: 3/12 + 2/12 = 5/12"}
+                ],
+                "Десятичные дроби": [
+                    {title: "Деление десятичных дробей", question: "Как разделить 4.5 на 0.5?", answer: "Умножаем оба числа на 10: 45 ÷ 5 = 9"}
+                ],
+                "Проценты": [
+                    {title: "Процентное соотношение", question: "15 это сколько процентов от 60?", answer: "(15/60)×100 = 25%"}
+                ],
+                "Пропорции": [
+                    {title: "Основное свойство пропорции", question: "Что означает запись a:b = c:d?", answer: "a×d = b×c"}
+                ],
+                "Координатная плоскость": [
+                    {title: "Координаты точки", question: "Как записываются координаты точки на плоскости?", answer: "(x, y)"}
+                ],
+                "Геометрия": [
+                    {title: "Окружность и круг", question: "Чем отличается окружность от круга?", answer: "Окружность - это граница, круг - это вся площадь внутри"}
+                ],
+                "Задачи на движение": [
+                    {title: "Встречное движение", question: "Два велосипедиста едут навстречу со скоростями 10 и 15 км/ч. Через сколько часов они встретятся, если расстояние 50 км?", answer: "50 ÷ (10 + 15) = 2 часа"}
+                ]
+            },
+            "7": {
+                "Алгебра": [
+                    {title: "Квадратное уравнение", question: "Как выглядит общая формула квадратного уравнения?", answer: "ax² + bx + c = 0"}
+                ],
+                "Геометрия": [
+                    {title: "Теорема Пифагора", question: "Как формулируется теорема Пифагора?", answer: "В прямоугольном треугольнике: a² + b² = c²"}
+                ],
+                "Линейные уравнения": [
+                    {title: "Решение уравнений", question: "Решите уравнение: 2x + 5 = 15", answer: "2x = 10 → x = 5"}
+                ],
+                "Функции": [
+                    {title: "Линейная функция", question: "Как выглядит график линейной функции?", answer: "Прямая линия"}
+                ],
+                "Треугольники": [
+                    {title: "Виды треугольников", question: "Какой треугольник называется прямоугольным?", answer: "Треугольник с углом 90°"}
+                ],
+                "Системы уравнений": [
+                    {title: "Решение систем", question: "Как решить систему из двух уравнений?", answer: "Методом подстановки или сложения"}
+                ],
+                "Неравенства": [
+                    {title: "Линейные неравенства", question: "Решите неравенство: 3x - 7 > 5", answer: "3x > 12 → x > 4"}
+                ]
+            },
+            "8": {
+                "Алгебра": [
+                    {title: "Квадратные уравнения", question: "Как найти корни квадратного уравнения через дискриминант?", answer: "x₁,₂ = (-b ± √D) / (2a)"}
+                ],
+                "Геометрия": [
+                    {title: "Площадь круга", question: "Как вычисляется площадь круга?", answer: "S = πr²"}
+                ],
+                "Теорема Виета": [
+                    {title: "Формулировка", question: "Какие соотношения устанавливает теорема Виета?", answer: "Для x² + px + q = 0: x₁ + x₂ = -p, x₁ * x₂ = q"}
+                ],
+                "Четырехугольники": [
+                    {title: "Виды четырехугольников", question: "Какие свойства у параллелограмма?", answer: "Противоположные стороны параллельны и равны"}
+                ],
+                "Функции": [
+                    {title: "Квадратичная функция", question: "Как выглядит график функции y = x²?", answer: "Парабола"}
+                ],
+                "Подобные треугольники": [
+                    {title: "Признаки подобия", question: "Сформулируйте первый признак подобия треугольников", answer: "По двум равным углам"}
+                ],
+                "Неравенства": [
+                    {title: "Квадратные неравенства", question: "Как решить неравенство x² - 4 > 0?", answer: "x ∈ (-∞; -2) ∪ (2; +∞)"}
+                ]
+            },
+            "9": {
+                "Алгебра": [
+                    {title: "Прогрессии", question: "Как найти сумму первых n членов арифметической прогрессии?", answer: "Sₙ = (a₁ + aₙ) × n / 2"}
+                ],
+                "Геометрия": [
+                    {title: "Тригонометрия", question: "Чему равен sin(30°)?", answer: "sin(30°) = 1/2"}
+                ],
+                "Вероятность": [
+                    {title: "Основные понятия", question: "Какова вероятность выпадения орла при подбрасывании монеты?", answer: "1/2 или 50%"}
+                ],
+                "Тригонометрические функции": [
+                    {title: "Основные тождества", question: "Каково основное тригонометрическое тождество?", answer: "sin²α + cos²α = 1"}
+                ],
+                "Векторы": [
+                    {title: "Координаты вектора", question: "Как найти длину вектора с координатами (3,4)?", answer: "√(3² + 4²) = 5"}
+                ],
+                "Окружность": [
+                    {title: "Уравнение окружности", question: "Как выглядит уравнение окружности с центром в (a,b) и радиусом R?", answer: "(x-a)² + (y-b)² = R²"}
+                ],
+                "Логарифмы": [
+                    {title: "Определение логарифма", question: "Что означает запись logₐb = c?", answer: "aᶜ = b"}
+                ]
+            },
+            "10": {
+                "Тригонометрия": [
+                    {title: "Формулы сложения", question: "Чему равен sin(α + β)?", answer: "sinαcosβ + cosαsinβ"}
+                ],
+                "Производная": [
+                    {title: "Определение", question: "Что такое производная функции?", answer: "Предел отношения приращения функции к приращению аргумента"}
+                ],
+                "Логарифмы": [
+                    {title: "Свойства логарифмов", question: "Чему равен логарифм произведения?", answer: "logₐ(xy) = logₐx + logₐy"}
+                ],
+                "Показательные уравнения": [
+                    {title: "Решение", question: "Как решить уравнение 2ˣ = 8?", answer: "x = 3, так как 2³ = 8"}
+                ],
+                "Тригонометрические уравнения": [
+                    {title: "Простейшие уравнения", question: "Как решить уравнение sinx = 1/2?", answer: "x = π/6 + 2πn, x = 5π/6 + 2πn, n ∈ Z"}
+                ],
+                "Многочлены": [
+                    {title: "Разложение на множители", question: "Как разложить x² - 5x + 6?", answer: "(x - 2)(x - 3)"}
+                ],
+                "Функции": [
+                    {title: "Исследование функций", question: "Как найти экстремумы функции?", answer: "Через производную: f'(x) = 0"}
+                ]
+            },
+            "11": {
+                "Производные": [
+                    {title: "Производная экспоненты", question: "Чему равна производная eˣ?", answer: "eˣ"}
+                ],
+                "Интегралы": [
+                    {title: "Определенный интеграл", question: "Что вычисляет определенный интеграл?", answer: "Площадь под кривой на заданном интервале"}
+                ],
+                "Стереометрия": [
+                    {title: "Объем шара", question: "Как вычислить объем шара?", answer: "V = (4/3)πr³"}
+                ],
+                "Теория вероятностей": [
+                    {title: "Формула Бернулли", question: "Какова формула вероятности k успехов в n испытаниях?", answer: "P = Cₙᵏ × pᵏ × (1-p)ⁿ⁻ᵏ"}
+                ],
+                "Комбинаторика": [
+                    {title: "Сочетания", question: "Как вычислить число сочетаний из n по k?", answer: "Cₙᵏ = n! / (k!(n-k)!)"}
+                ],
+                "Логарифмические уравнения": [
+                    {title: "Решение", question: "Как решить уравнение log₂(x+1) = 3?", answer: "x+1 = 2³ → x = 7"}
+                ],
+                "Комплексные числа": [
+                    {title: "Определение", question: "Что такое комплексное число?", answer: "Число вида a + bi, где i² = -1"}
+                ]
+            }
+        };
+
+        // Текущий класс и тема
+        let currentGrade = null;
+        let currentTopic = null;
+        
+        // Прогресс изучения
+        let progress = JSON.parse(localStorage.getItem('flashcardsProgress')) || {};
+        
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация прогресса
+            initializeProgress();
+            
+            // Создаем кнопки классов
+            createGradeButtons();
+            
+            // Обработчики кнопок
+            document.getElementById('backToGradesBtn').addEventListener('click', backToGrades);
+            document.getElementById('resetBtn').addEventListener('click', resetProgress);
+            document.getElementById('shuffleBtn').addEventListener('click', shuffleFlashcards);
+        });
+        
+        // Инициализация структуры прогресса
+        function initializeProgress() {
+            for (const grade in flashcardsData) {
+                if (!progress[grade]) progress[grade] = {};
+                
+                for (const topic in flashcardsData[grade]) {
+                    if (!progress[grade][topic]) progress[grade][topic] = {};
+                }
+            }
+            localStorage.setItem('flashcardsProgress', JSON.stringify(progress));
+        }
+        
+        // Создание кнопок классов
+        function createGradeButtons() {
+            const gradesContainer = document.getElementById('gradesContainer');
+            gradesContainer.innerHTML = '';
+            
+            const gradeColors = getComputedStyle(document.documentElement)
+                .getPropertyValue('--grade-colors').split(',');
+            
+            for (let grade = 1; grade <= 11; grade++) {
+                const gradeCard = document.createElement('div');
+                gradeCard.className = 'grade-card';
+                gradeCard.textContent = `${grade} класс`;
+                gradeCard.dataset.grade = grade;
+                gradeCard.style.backgroundColor = gradeColors[grade-1].trim();
+                
+                gradeCard.addEventListener('click', function() {
+                    currentGrade = this.dataset.grade;
+                    showTopicsForGrade();
+                });
+                
+                gradesContainer.appendChild(gradeCard);
+            }
+        }
+        
+        // Показать темы для выбранного класса
+        function showTopicsForGrade() {
+            document.querySelector('.grade-section').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            
+            const topicSelector = document.getElementById('topicSelector');
+            topicSelector.innerHTML = '';
+            
+            const topics = Object.keys(flashcardsData[currentGrade]);
+            topics.forEach(topic => {
+                const topicBtn = document.createElement('button');
+                topicBtn.className = 'topic-btn';
+                topicBtn.textContent = topic;
+                topicBtn.dataset.topic = topic;
+                
+                topicBtn.addEventListener('click', function() {
+                    currentTopic = this.dataset.topic;
+                    renderFlashcards();
+                });
+                
+                topicSelector.appendChild(topicBtn);
+            });
+        }
+        
+        // Рендер карточек
+        function renderFlashcards() {
+            const container = document.getElementById('flashcardsContainer');
+            container.innerHTML = '';
+            
+            const cards = flashcardsData[currentGrade][currentTopic];
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'flashcard';
+                cardElement.dataset.index = index;
+                cardElement.dataset.learned = progress[currentGrade][currentTopic][index] ? 'true' : 'false';
+                
+                if (progress[currentGrade][currentTopic][index]) {
+                    cardElement.style.border = '2px solid var(--success-color)';
+                }
+                
+                cardElement.innerHTML = `
+                    <div class="flashcard-front">
+                        <div class="flashcard-title">${card.title}</div>
+                        <div class="flashcard-content">${card.question}</div>
+                        <div class="flip-icon">Нажмите, чтобы перевернуть</div>
+                    </div>
+                    <div class="flashcard-back">
+                        <div class="flashcard-title">${card.title}</div>
+                        <div class="formula">${card.answer}</div>
+                        ${card.example ? `<div class="example">${card.example}</div>` : ''}
+                        <div class="flip-icon">Нажмите, чтобы перевернуть</div>
+                    </div>
+                `;
+                
+                cardElement.addEventListener('click', function() {
+                    this.classList.toggle('flipped');
+                    
+                    // Отмечаем карточку как изученную при первом перевороте
+                    const cardIndex = parseInt(this.dataset.index);
+                    if (!progress[currentGrade][currentTopic][cardIndex]) {
+                        progress[currentGrade][currentTopic][cardIndex] = true;
+                        localStorage.setItem('flashcardsProgress', JSON.stringify(progress));
+                        this.dataset.learned = 'true';
+                        this.style.border = '2px solid var(--success-color)';
+                        updateProgress();
+                    }
+                });
+                
+                container.appendChild(cardElement);
+            });
+            
+            updateProgress();
+        }
+        
+        // Обновление прогресса
+        function updateProgress() {
+            const learnedCount = Object.keys(progress[currentGrade][currentTopic]).filter(
+                k => progress[currentGrade][currentTopic][k]
+            ).length;
+            const totalCount = flashcardsData[currentGrade][currentTopic].length;
+            const percentage = Math.round((learnedCount / totalCount) * 100);
+            
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+            document.getElementById('progressText').textContent = 
+                `Прогресс: ${learnedCount}/${totalCount} изучено (${percentage}%)`;
+        }
+        
+        // Назад к выбору классов
+        function backToGrades() {
+            document.getElementById('appContainer').style.display = 'none';
+            document.querySelector('.grade-section').style.display = 'block';
+            currentGrade = null;
+            currentTopic = null;
+        }
+        
+        // Сброс прогресса
+        function resetProgress() {
+            if (confirm('Вы уверены, что хотите сбросить прогресс по текущей теме?')) {
+                progress[currentGrade][currentTopic] = {};
+                localStorage.setItem('flashcardsProgress', JSON.stringify(progress));
+                renderFlashcards();
+            }
+        }
+        
+        // Перемешивание карточек
+        function shuffleFlashcards() {
+            flashcardsData[currentGrade][currentTopic] = shuffleArray(flashcardsData[currentGrade][currentTopic]);
+            renderFlashcards();
+        }
+        
+        // Вспомогательная функция для перемешивания массива
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+    </script>
+</body>
+</html>
